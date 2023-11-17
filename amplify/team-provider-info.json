@@ -20,6 +20,9 @@
           "appId": "d13tnhxril94oc",
           "type": "manual"
         }
+      },
+      "api": {
+        "parkingManager": {}
       }
     }
   }
