@@ -2,16 +2,16 @@ import { useState } from "react";
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import MainDrawer from "./MainDrawer";
 import { useNavigate } from "react-router-dom";
+import MenuIcon from "@mui/icons-material/Menu";
 
 import {
 	AppBar,
-	Box,
 	Toolbar,
 	Button,
 	IconButton,
 	Typography,
+	Box,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
 
 /**
  * Render Heading and Drawer for any page to use
