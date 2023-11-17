@@ -1,0 +1,22 @@
+type Credentials @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  user: String
+  resort: Resort
+  username: String
+  password: String
+}
+
+enum Resort {
+  SOLITUDE
+  ALTA
+  BRIGHTON
+}
+
+type ToReserve @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  user: String
+  resort: Resort
+  reserveOn: AWSDate
+  reserveTarget: AWSDate
+  Credentials: Credentials @hasOne
+}
