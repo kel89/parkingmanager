@@ -43,6 +43,7 @@ export default function Scheduler({submitReservation, working}) {
 
 			<div className="mt-2">When do you want the reservation made?</div>
 			<DatePicker
+				inputReadOnly
 				disabled={working}
 				onChange={(date) => setReserveOn(dayjs(date).toDate())}
 			/>
@@ -51,6 +52,7 @@ export default function Scheduler({submitReservation, working}) {
 				What date do you want the reservation made for?
 			</div>
 			<DatePicker
+				inputReadOnly
 				disabled={working}
 				onChange={(date) => setReserveTarget(dayjs(date).toDate())}
 			/>
