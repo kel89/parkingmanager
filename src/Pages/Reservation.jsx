@@ -7,6 +7,8 @@ import ToReserveList from "../Partials/ToReserveList";
 export default function Reservation({}) {
 	const { user } = useAuthenticator((context) => [context.user]);
 
+	// Hoist all gql logic here
+
 	return (
 		<>
 			<Layout pageName="Reservation">
