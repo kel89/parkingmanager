@@ -1,51 +1,26 @@
-import { useEffect, useState } from "react";
-import { useAuthenticator } from "@aws-amplify/ui-react";
+import { useState } from "react";
 import { CircularProgress, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import dayjs from "dayjs";
 import { DatePicker } from "antd";
-import { generateClient } from 'aws-amplify/api';
-import * as mutations from '../graphql/mutations';
 
-export default function Scheduler() {
-	const { user } = useAuthenticator((context) => [context.user]);
-	const client = generateClient();
+export default function Scheduler({submitReservation, working}) {
+	
 
 	const [resort, setResort] = useState("Solitude");
 	const [reserveOn, setReserveOn] = useState(new Date());
 	const [reserveTarget, setReserveTarget] = useState();
 	const [reserveTime, setReserveTime] = useState("3pm");
-	const [working, setWorking] = useState(false);
 
-	const handleResortChange = (e) => {
-		setResort(e.target.value);
-	};
+	const handleSubmission = async () => {
+		await submitReservation(
+			resort.toUpperCase(),
+			dayjs(reserveOn).format("YYYY-MM-DD"),
+			dayjs(reserveTarget).format("YYYY-MM-DD"),
+			reserveTime == "6am" ? "06:00:00.000" : "15:00:00.000"
+		);
 
-	const submitReservation = async () => {
-		// Disable inputs
-		setWorking(true);
-		// Organize data
-		let data = {
-			user: user.userId,
-			resort: resort.toUpperCase(),
-			reserveOn: dayjs(reserveOn).format("YYYY-MM-DD"),
-			reserveTarget: dayjs(reserveTarget).format("YYYY-MM-DD"),
-			reserveTime: reserveTime == "6am" ? "06:00:00.000" : "15:00:00.000"
-		}
+	}
 
-		// Make graph request
-		let newRes;
-		try {
-			newRes = await client.graphql({
-				query: mutations.createToReserve,
-				variables: {input: data}
-			});
-		} catch (err) {
-			window.alert("There was an error... try again?")
-		}
-
-		console.log(newRes);
-		setWorking(false);
-	};
 
 	return (
 		<div className="p-3 border rounded-md shadow-md w-11/12 max-w-4xl">
@@ -58,7 +33,7 @@ export default function Scheduler() {
 					value={resort}
 					label="Resort"
 					disabled={working}
-					onChange={handleResortChange}
+					onChange={e => setResort(e.target.value)}
 				>
 					<MenuItem value="Solitude">Solitude</MenuItem>
 					<MenuItem value="Brighton">Brighton</MenuItem>
@@ -98,7 +73,7 @@ export default function Scheduler() {
 
 			<div className="mt-4">
 				<button
-					onClick={submitReservation}
+					onClick={handleSubmission}
 					disabled={working}
 					className="bg-blue-500 text-white hover:bg-blue-700 rounded-md w-full py-5"
 				>
