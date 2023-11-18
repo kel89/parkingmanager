@@ -6,7 +6,16 @@
 
 import * as React from "react";
 import { GridProps, SelectFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
-import { EscapeHatchProps } from "@aws-amplify/ui-react/internal";
+export declare type EscapeHatchProps = {
+    [elementHierarchy: string]: Record<string, unknown>;
+} | null;
+export declare type VariantValues = {
+    [key: string]: string;
+};
+export declare type Variant = {
+    variantValues: VariantValues;
+    overrides: EscapeHatchProps;
+};
 export declare type ValidationResponse = {
     hasError: boolean;
     errorMessage?: string;
@@ -17,12 +26,14 @@ export declare type ToReserveCreateFormInputValues = {
     resort?: string;
     reserveOn?: string;
     reserveTarget?: string;
+    reserveTime?: string;
 };
 export declare type ToReserveCreateFormValidationValues = {
     user?: ValidationFunction<string>;
     resort?: ValidationFunction<string>;
     reserveOn?: ValidationFunction<string>;
     reserveTarget?: ValidationFunction<string>;
+    reserveTime?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ToReserveCreateFormOverridesProps = {
@@ -31,6 +42,7 @@ export declare type ToReserveCreateFormOverridesProps = {
     resort?: PrimitiveOverrideProps<SelectFieldProps>;
     reserveOn?: PrimitiveOverrideProps<TextFieldProps>;
     reserveTarget?: PrimitiveOverrideProps<TextFieldProps>;
+    reserveTime?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type ToReserveCreateFormProps = React.PropsWithChildren<{
     overrides?: ToReserveCreateFormOverridesProps | undefined | null;

@@ -13,14 +13,15 @@ import {
   SelectField,
   TextField,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { Credentials } from "../models";
-import { fetchByPath, validateField } from "./utils";
-import { DataStore } from "aws-amplify";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
+import { generateClient } from "aws-amplify/api";
+import { getCredentials } from "../graphql/queries";
+import { updateCredentials } from "../graphql/mutations";
+const client = generateClient();
 export default function CredentialsUpdateForm(props) {
   const {
     id: idProp,
-    credentials,
+    credentials: credentialsModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -31,7 +32,7 @@ export default function CredentialsUpdateForm(props) {
   } = props;
   const initialValues = {
     user: "",
-    resort: undefined,
+    resort: "",
     username: "",
     password: "",
   };
@@ -50,16 +51,22 @@ export default function CredentialsUpdateForm(props) {
     setPassword(cleanValues.password);
     setErrors({});
   };
-  const [credentialsRecord, setCredentialsRecord] = React.useState(credentials);
+  const [credentialsRecord, setCredentialsRecord] =
+    React.useState(credentialsModelProp);
   React.useEffect(() => {
     const queryData = async () => {
       const record = idProp
-        ? await DataStore.query(Credentials, idProp)
-        : credentials;
+        ? (
+            await client.graphql({
+              query: getCredentials.replaceAll("__typename", ""),
+              variables: { id: idProp },
+            })
+          )?.data?.getCredentials
+        : credentialsModelProp;
       setCredentialsRecord(record);
     };
     queryData();
-  }, [idProp, credentials]);
+  }, [idProp, credentialsModelProp]);
   React.useEffect(resetStateValues, [credentialsRecord]);
   const validations = {
     user: [],
@@ -72,9 +79,10 @@ export default function CredentialsUpdateForm(props) {
     currentValue,
     getDisplayValue
   ) => {
-    const value = getDisplayValue
-      ? getDisplayValue(currentValue)
-      : currentValue;
+    const value =
+      currentValue && getDisplayValue
+        ? getDisplayValue(currentValue)
+        : currentValue;
     let validationResponse = validateField(value, validations[fieldName]);
     const customValidator = fetchByPath(onValidate, fieldName);
     if (customValidator) {
@@ -92,10 +100,10 @@ export default function CredentialsUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          user,
-          resort,
-          username,
-          password,
+          user: user ?? null,
+          resort: resort ?? null,
+          username: username ?? null,
+          password: password ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -121,21 +129,26 @@ export default function CredentialsUpdateForm(props) {
         }
         try {
           Object.entries(modelFields).forEach(([key, value]) => {
-            if (typeof value === "string" && value.trim() === "") {
-              modelFields[key] = undefined;
+            if (typeof value === "string" && value === "") {
+              modelFields[key] = null;
             }
           });
-          await DataStore.save(
-            Credentials.copyOf(credentialsRecord, (updated) => {
-              Object.assign(updated, modelFields);
-            })
-          );
+          await client.graphql({
+            query: updateCredentials.replaceAll("__typename", ""),
+            variables: {
+              input: {
+                id: credentialsRecord.id,
+                ...modelFields,
+              },
+            },
+          });
           if (onSuccess) {
             onSuccess(modelFields);
           }
         } catch (err) {
           if (onError) {
-            onError(modelFields, err.message);
+            const messages = err.errors.map((e) => e.message).join("\n");
+            onError(modelFields, messages);
           }
         }
       }}
@@ -277,7 +290,7 @@ export default function CredentialsUpdateForm(props) {
             event.preventDefault();
             resetStateValues();
           }}
-          isDisabled={!(idProp || credentials)}
+          isDisabled={!(idProp || credentialsModelProp)}
           {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
@@ -289,7 +302,7 @@ export default function CredentialsUpdateForm(props) {
             type="submit"
             variation="primary"
             isDisabled={
-              !(idProp || credentials) ||
+              !(idProp || credentialsModelProp) ||
               Object.values(errors).some((e) => e?.hasError)
             }
             {...getOverrideProps(overrides, "SubmitButton")}

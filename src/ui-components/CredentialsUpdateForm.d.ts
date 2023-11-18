@@ -6,8 +6,16 @@
 
 import * as React from "react";
 import { GridProps, SelectFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
-import { EscapeHatchProps } from "@aws-amplify/ui-react/internal";
-import { Credentials } from "../models";
+export declare type EscapeHatchProps = {
+    [elementHierarchy: string]: Record<string, unknown>;
+} | null;
+export declare type VariantValues = {
+    [key: string]: string;
+};
+export declare type Variant = {
+    variantValues: VariantValues;
+    overrides: EscapeHatchProps;
+};
 export declare type ValidationResponse = {
     hasError: boolean;
     errorMessage?: string;
@@ -37,7 +45,7 @@ export declare type CredentialsUpdateFormProps = React.PropsWithChildren<{
     overrides?: CredentialsUpdateFormOverridesProps | undefined | null;
 } & {
     id?: string;
-    credentials?: Credentials;
+    credentials?: any;
     onSubmit?: (fields: CredentialsUpdateFormInputValues) => CredentialsUpdateFormInputValues;
     onSuccess?: (fields: CredentialsUpdateFormInputValues) => void;
     onError?: (fields: CredentialsUpdateFormInputValues, errorMessage: string) => void;

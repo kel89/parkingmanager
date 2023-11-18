@@ -13,14 +13,15 @@ import {
   SelectField,
   TextField,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { ToReserve } from "../models";
-import { fetchByPath, validateField } from "./utils";
-import { DataStore } from "aws-amplify";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
+import { generateClient } from "aws-amplify/api";
+import { getToReserve } from "../graphql/queries";
+import { updateToReserve } from "../graphql/mutations";
+const client = generateClient();
 export default function ToReserveUpdateForm(props) {
   const {
     id: idProp,
-    toReserve,
+    toReserve: toReserveModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -31,15 +32,19 @@ export default function ToReserveUpdateForm(props) {
   } = props;
   const initialValues = {
     user: "",
-    resort: undefined,
+    resort: "",
     reserveOn: "",
     reserveTarget: "",
+    reserveTime: "",
   };
   const [user, setUser] = React.useState(initialValues.user);
   const [resort, setResort] = React.useState(initialValues.resort);
   const [reserveOn, setReserveOn] = React.useState(initialValues.reserveOn);
   const [reserveTarget, setReserveTarget] = React.useState(
     initialValues.reserveTarget
+  );
+  const [reserveTime, setReserveTime] = React.useState(
+    initialValues.reserveTime
   );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
@@ -50,33 +55,42 @@ export default function ToReserveUpdateForm(props) {
     setResort(cleanValues.resort);
     setReserveOn(cleanValues.reserveOn);
     setReserveTarget(cleanValues.reserveTarget);
+    setReserveTime(cleanValues.reserveTime);
     setErrors({});
   };
-  const [toReserveRecord, setToReserveRecord] = React.useState(toReserve);
+  const [toReserveRecord, setToReserveRecord] =
+    React.useState(toReserveModelProp);
   React.useEffect(() => {
     const queryData = async () => {
       const record = idProp
-        ? await DataStore.query(ToReserve, idProp)
-        : toReserve;
+        ? (
+            await client.graphql({
+              query: getToReserve.replaceAll("__typename", ""),
+              variables: { id: idProp },
+            })
+          )?.data?.getToReserve
+        : toReserveModelProp;
       setToReserveRecord(record);
     };
     queryData();
-  }, [idProp, toReserve]);
+  }, [idProp, toReserveModelProp]);
   React.useEffect(resetStateValues, [toReserveRecord]);
   const validations = {
     user: [],
     resort: [],
     reserveOn: [],
     reserveTarget: [],
+    reserveTime: [],
   };
   const runValidationTasks = async (
     fieldName,
     currentValue,
     getDisplayValue
   ) => {
-    const value = getDisplayValue
-      ? getDisplayValue(currentValue)
-      : currentValue;
+    const value =
+      currentValue && getDisplayValue
+        ? getDisplayValue(currentValue)
+        : currentValue;
     let validationResponse = validateField(value, validations[fieldName]);
     const customValidator = fetchByPath(onValidate, fieldName);
     if (customValidator) {
@@ -94,10 +108,11 @@ export default function ToReserveUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          user,
-          resort,
-          reserveOn,
-          reserveTarget,
+          user: user ?? null,
+          resort: resort ?? null,
+          reserveOn: reserveOn ?? null,
+          reserveTarget: reserveTarget ?? null,
+          reserveTime: reserveTime ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -123,21 +138,26 @@ export default function ToReserveUpdateForm(props) {
         }
         try {
           Object.entries(modelFields).forEach(([key, value]) => {
-            if (typeof value === "string" && value.trim() === "") {
-              modelFields[key] = undefined;
+            if (typeof value === "string" && value === "") {
+              modelFields[key] = null;
             }
           });
-          await DataStore.save(
-            ToReserve.copyOf(toReserveRecord, (updated) => {
-              Object.assign(updated, modelFields);
-            })
-          );
+          await client.graphql({
+            query: updateToReserve.replaceAll("__typename", ""),
+            variables: {
+              input: {
+                id: toReserveRecord.id,
+                ...modelFields,
+              },
+            },
+          });
           if (onSuccess) {
             onSuccess(modelFields);
           }
         } catch (err) {
           if (onError) {
-            onError(modelFields, err.message);
+            const messages = err.errors.map((e) => e.message).join("\n");
+            onError(modelFields, messages);
           }
         }
       }}
@@ -157,6 +177,7 @@ export default function ToReserveUpdateForm(props) {
               resort,
               reserveOn,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.user ?? value;
@@ -184,6 +205,7 @@ export default function ToReserveUpdateForm(props) {
               resort: value,
               reserveOn,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.resort ?? value;
@@ -228,6 +250,7 @@ export default function ToReserveUpdateForm(props) {
               resort,
               reserveOn: value,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.reserveOn ?? value;
@@ -256,6 +279,7 @@ export default function ToReserveUpdateForm(props) {
               resort,
               reserveOn,
               reserveTarget: value,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.reserveTarget ?? value;
@@ -270,6 +294,35 @@ export default function ToReserveUpdateForm(props) {
         hasError={errors.reserveTarget?.hasError}
         {...getOverrideProps(overrides, "reserveTarget")}
       ></TextField>
+      <TextField
+        label="Reserve time"
+        isRequired={false}
+        isReadOnly={false}
+        type="time"
+        value={reserveTime}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              user,
+              resort,
+              reserveOn,
+              reserveTarget,
+              reserveTime: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.reserveTime ?? value;
+          }
+          if (errors.reserveTime?.hasError) {
+            runValidationTasks("reserveTime", value);
+          }
+          setReserveTime(value);
+        }}
+        onBlur={() => runValidationTasks("reserveTime", reserveTime)}
+        errorMessage={errors.reserveTime?.errorMessage}
+        hasError={errors.reserveTime?.hasError}
+        {...getOverrideProps(overrides, "reserveTime")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
@@ -281,7 +334,7 @@ export default function ToReserveUpdateForm(props) {
             event.preventDefault();
             resetStateValues();
           }}
-          isDisabled={!(idProp || toReserve)}
+          isDisabled={!(idProp || toReserveModelProp)}
           {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
@@ -293,7 +346,7 @@ export default function ToReserveUpdateForm(props) {
             type="submit"
             variation="primary"
             isDisabled={
-              !(idProp || toReserve) ||
+              !(idProp || toReserveModelProp) ||
               Object.values(errors).some((e) => e?.hasError)
             }
             {...getOverrideProps(overrides, "SubmitButton")}

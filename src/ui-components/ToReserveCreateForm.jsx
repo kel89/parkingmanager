@@ -13,10 +13,10 @@ import {
   SelectField,
   TextField,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { ToReserve } from "../models";
-import { fetchByPath, validateField } from "./utils";
-import { DataStore } from "aws-amplify";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
+import { generateClient } from "aws-amplify/api";
+import { createToReserve } from "../graphql/mutations";
+const client = generateClient();
 export default function ToReserveCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -30,9 +30,10 @@ export default function ToReserveCreateForm(props) {
   } = props;
   const initialValues = {
     user: "",
-    resort: undefined,
+    resort: "",
     reserveOn: "",
     reserveTarget: "",
+    reserveTime: "",
   };
   const [user, setUser] = React.useState(initialValues.user);
   const [resort, setResort] = React.useState(initialValues.resort);
@@ -40,12 +41,16 @@ export default function ToReserveCreateForm(props) {
   const [reserveTarget, setReserveTarget] = React.useState(
     initialValues.reserveTarget
   );
+  const [reserveTime, setReserveTime] = React.useState(
+    initialValues.reserveTime
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setUser(initialValues.user);
     setResort(initialValues.resort);
     setReserveOn(initialValues.reserveOn);
     setReserveTarget(initialValues.reserveTarget);
+    setReserveTime(initialValues.reserveTime);
     setErrors({});
   };
   const validations = {
@@ -53,15 +58,17 @@ export default function ToReserveCreateForm(props) {
     resort: [],
     reserveOn: [],
     reserveTarget: [],
+    reserveTime: [],
   };
   const runValidationTasks = async (
     fieldName,
     currentValue,
     getDisplayValue
   ) => {
-    const value = getDisplayValue
-      ? getDisplayValue(currentValue)
-      : currentValue;
+    const value =
+      currentValue && getDisplayValue
+        ? getDisplayValue(currentValue)
+        : currentValue;
     let validationResponse = validateField(value, validations[fieldName]);
     const customValidator = fetchByPath(onValidate, fieldName);
     if (customValidator) {
@@ -83,6 +90,7 @@ export default function ToReserveCreateForm(props) {
           resort,
           reserveOn,
           reserveTarget,
+          reserveTime,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -108,11 +116,18 @@ export default function ToReserveCreateForm(props) {
         }
         try {
           Object.entries(modelFields).forEach(([key, value]) => {
-            if (typeof value === "string" && value.trim() === "") {
-              modelFields[key] = undefined;
+            if (typeof value === "string" && value === "") {
+              modelFields[key] = null;
             }
           });
-          await DataStore.save(new ToReserve(modelFields));
+          await client.graphql({
+            query: createToReserve.replaceAll("__typename", ""),
+            variables: {
+              input: {
+                ...modelFields,
+              },
+            },
+          });
           if (onSuccess) {
             onSuccess(modelFields);
           }
@@ -121,7 +136,8 @@ export default function ToReserveCreateForm(props) {
           }
         } catch (err) {
           if (onError) {
-            onError(modelFields, err.message);
+            const messages = err.errors.map((e) => e.message).join("\n");
+            onError(modelFields, messages);
           }
         }
       }}
@@ -141,6 +157,7 @@ export default function ToReserveCreateForm(props) {
               resort,
               reserveOn,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.user ?? value;
@@ -168,6 +185,7 @@ export default function ToReserveCreateForm(props) {
               resort: value,
               reserveOn,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.resort ?? value;
@@ -212,6 +230,7 @@ export default function ToReserveCreateForm(props) {
               resort,
               reserveOn: value,
               reserveTarget,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.reserveOn ?? value;
@@ -240,6 +259,7 @@ export default function ToReserveCreateForm(props) {
               resort,
               reserveOn,
               reserveTarget: value,
+              reserveTime,
             };
             const result = onChange(modelFields);
             value = result?.reserveTarget ?? value;
@@ -253,6 +273,35 @@ export default function ToReserveCreateForm(props) {
         errorMessage={errors.reserveTarget?.errorMessage}
         hasError={errors.reserveTarget?.hasError}
         {...getOverrideProps(overrides, "reserveTarget")}
+      ></TextField>
+      <TextField
+        label="Reserve time"
+        isRequired={false}
+        isReadOnly={false}
+        type="time"
+        value={reserveTime}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              user,
+              resort,
+              reserveOn,
+              reserveTarget,
+              reserveTime: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.reserveTime ?? value;
+          }
+          if (errors.reserveTime?.hasError) {
+            runValidationTasks("reserveTime", value);
+          }
+          setReserveTime(value);
+        }}
+        onBlur={() => runValidationTasks("reserveTime", reserveTime)}
+        errorMessage={errors.reserveTime?.errorMessage}
+        hasError={errors.reserveTime?.hasError}
+        {...getOverrideProps(overrides, "reserveTime")}
       ></TextField>
       <Flex
         justifyContent="space-between"

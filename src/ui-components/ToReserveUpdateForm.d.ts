@@ -6,8 +6,16 @@
 
 import * as React from "react";
 import { GridProps, SelectFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
-import { EscapeHatchProps } from "@aws-amplify/ui-react/internal";
-import { ToReserve } from "../models";
+export declare type EscapeHatchProps = {
+    [elementHierarchy: string]: Record<string, unknown>;
+} | null;
+export declare type VariantValues = {
+    [key: string]: string;
+};
+export declare type Variant = {
+    variantValues: VariantValues;
+    overrides: EscapeHatchProps;
+};
 export declare type ValidationResponse = {
     hasError: boolean;
     errorMessage?: string;
@@ -18,12 +26,14 @@ export declare type ToReserveUpdateFormInputValues = {
     resort?: string;
     reserveOn?: string;
     reserveTarget?: string;
+    reserveTime?: string;
 };
 export declare type ToReserveUpdateFormValidationValues = {
     user?: ValidationFunction<string>;
     resort?: ValidationFunction<string>;
     reserveOn?: ValidationFunction<string>;
     reserveTarget?: ValidationFunction<string>;
+    reserveTime?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type ToReserveUpdateFormOverridesProps = {
@@ -32,12 +42,13 @@ export declare type ToReserveUpdateFormOverridesProps = {
     resort?: PrimitiveOverrideProps<SelectFieldProps>;
     reserveOn?: PrimitiveOverrideProps<TextFieldProps>;
     reserveTarget?: PrimitiveOverrideProps<TextFieldProps>;
+    reserveTime?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type ToReserveUpdateFormProps = React.PropsWithChildren<{
     overrides?: ToReserveUpdateFormOverridesProps | undefined | null;
 } & {
     id?: string;
-    toReserve?: ToReserve;
+    toReserve?: any;
     onSubmit?: (fields: ToReserveUpdateFormInputValues) => ToReserveUpdateFormInputValues;
     onSuccess?: (fields: ToReserveUpdateFormInputValues) => void;
     onError?: (fields: ToReserveUpdateFormInputValues, errorMessage: string) => void;
