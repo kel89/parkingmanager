@@ -14,6 +14,9 @@ export default function Home({}) {
 			<Layout pageName="Home">
 				<div className="container mx-auto">
 					<div className="p-5 flex flex-col">
+						<div className='text-red-800 font-extrabold my-5 text-xl text-center bg-red-300 py-3 rounded-sm'>
+							Only Solitude Season Park Pass Currently Functional!
+						</div>
 						<div className="flex flex-col items-center text-center gap-4">
 							<h2 className="text-xl font-bold">Parking Sites</h2>
 							<button
