@@ -68,6 +68,15 @@ export default function MainDrawer({ open, setOpen }) {
 						<ListItemText primary={"Credentials"} />
 					</ListItemButton>
 				</ListItem>
+
+				<ListItem disablePadding>
+					<ListItemButton onClick={() => navigate("/help")}>
+						<ListItemIcon>
+							<HelpIcon />
+						</ListItemIcon>
+						<ListItemText primary={"Help"} />
+					</ListItemButton>
+				</ListItem>
 			</List>
 			<Divider />
 			<List>

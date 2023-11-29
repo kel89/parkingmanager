@@ -11,6 +11,7 @@ import "@aws-amplify/ui-react/styles.css";
 import Home from "./Pages/Home";
 import Reservation from "./Pages/Reservation";
 import Credentials from "./Pages/Credentials";
+import HelpPage from "./Pages/Help";
 
 const router = createBrowserRouter([
 	{
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
 	{
 		path: "/credentials",
 		element: <Credentials />,
+	},
+	{
+		path: "/help",
+		element: <HelpPage />
 	}
 ]);
 
