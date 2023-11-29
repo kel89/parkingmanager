@@ -8,6 +8,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import KeyIcon from '@mui/icons-material/Key';
 import HomeIcon from "@mui/icons-material/Home";
 import HelpIcon from "@mui/icons-material/Help";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -56,6 +57,15 @@ export default function MainDrawer({ open, setOpen }) {
 							<AccessTimeIcon />
 						</ListItemIcon>
 						<ListItemText primary={"Schedule Reservation"} />
+					</ListItemButton>
+				</ListItem>
+
+				<ListItem disablePadding>
+					<ListItemButton onClick={() => navigate("/credentials")}>
+						<ListItemIcon>
+							<KeyIcon />
+						</ListItemIcon>
+						<ListItemText primary={"Credentials"} />
 					</ListItemButton>
 				</ListItem>
 			</List>

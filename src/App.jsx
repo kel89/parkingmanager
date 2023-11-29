@@ -10,6 +10,7 @@ import {
 import "@aws-amplify/ui-react/styles.css";
 import Home from "./Pages/Home";
 import Reservation from "./Pages/Reservation";
+import Credentials from "./Pages/Credentials";
 
 const router = createBrowserRouter([
 	{
@@ -20,10 +21,13 @@ const router = createBrowserRouter([
 		path: "/reservation",
 		element: <Reservation />,
 	},
+	{
+		path: "/credentials",
+		element: <Credentials />,
+	}
 ]);
 
 function App({ signOut, user }) {
-	const [count, setCount] = useState(0);
 
 	return (
 		<Authenticator hideSignUp={true}>
