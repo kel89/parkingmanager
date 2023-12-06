@@ -22,10 +22,12 @@ export default function ReservationCard({reservation, deleteReservation}){
         else
         return <div>{reservation.resort}</div>
     }
+
+    let expired = (dayjs()) > (dayjs(reservation.reserveOn))
     
 
     return (
-        <div className='border rounded-md shadow-md p-3'>
+        <div className={`border rounded-md shadow-md p-3 ${expired ? 'bg-gray-300' : ''}`}>
             <div className='flex justify-between w-full'>
                 <div className='w-7'>{getResortIcon()}</div>
                 <IconButton aria-label='delete' onClick={() => deleteReservation(reservation.id)}>
