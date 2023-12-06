@@ -14,7 +14,7 @@ export default function ReservationCard({reservation, deleteReservation}){
 
     const getResortIcon = () => {
         if (reservation.resort == "SOLITUDE") {
-            return <img className="w-7" src={solitude} alt="Solitude"/>
+            return <img src={solitude} alt="Solitude"/>
         }
         else if (reservation.resort == "BRIGHTON"){
             return <img className="w-7" src={brighton} alt="Brighton"/>
@@ -27,17 +27,19 @@ export default function ReservationCard({reservation, deleteReservation}){
     return (
         <div className='border rounded-md shadow-md p-3'>
             <div className='flex justify-between w-full'>
-                {getResortIcon()}                
-                <div>{dayjs(reservation.reserveTarget, 'YYYY-MM-DD').format("MMM DD, YYYY")}</div>
+                <div className='w-7'>{getResortIcon()}</div>
+                <IconButton aria-label='delete' onClick={() => deleteReservation(reservation.id)}>
+                    <DeleteOutline />
+                </IconButton>           
+                {/* <div>{dayjs(reservation.reserveTarget, 'YYYY-MM-DD').format("MMM DD, YYYY")}</div> */}
             </div>
+                <div className='text-lg font-bold'>{dayjs(reservation.reserveTarget, 'YYYY-MM-DD').format("MMM DD, YYYY")}</div>
             <div>
                 To be reserved on {dayjs(reservation.reserveOn, "YYYY-MM-DD").format("MMM DD, YYYY")}
                 &nbsp; at {parseTime(reservation.reserveTime)}
             </div>
             <div className='flex justify-end'>
-                <IconButton aria-label='delete' onClick={() => deleteReservation(reservation.id)}>
-                    <DeleteOutline />
-                </IconButton>
+                
             </div>
         </div>
     )
